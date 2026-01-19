@@ -133,15 +133,27 @@ body {
   @apply bg-gradient-to-r from-siren-primary to-purple-600 text-white;
 }
 
-/* Message bubbles */
-.message {
-  @apply max-w-[80%] p-4 rounded-2xl mb-3;
+/* Select dropdown styling */
+select {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
-.message.user {
-  @apply bg-siren-primary/30 ml-auto rounded-br-md;
+select option {
+  background-color: var(--siren-dark);
+  color: white;
+  padding: 8px;
 }
 
-.message.assistant {
-  @apply bg-white/10 mr-auto rounded-bl-md;
+/* For webkit browsers */
+select::-webkit-scrollbar {
+  width: 6px;
+}
+
+select::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+select::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.5);
 }

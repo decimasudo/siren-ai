@@ -13,6 +13,10 @@ interface UseVoiceReturn {
   voices: SpeechSynthesisVoice[];
   selectedVoice: SpeechSynthesisVoice | null;
   setSelectedVoice: (voice: SpeechSynthesisVoice) => void;
+  rate: number;
+  setRate: (rate: number) => void;
+  pitch: number;
+  setPitch: (pitch: number) => void;
 }
 
 export function useVoice(): UseVoiceReturn {
@@ -21,6 +25,8 @@ export function useVoice(): UseVoiceReturn {
   const [transcript, setTranscript] = useState('');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [rate, setRate] = useState(1);
+  const [pitch, setPitch] = useState(1);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -104,8 +110,8 @@ export function useVoice(): UseVoiceReturn {
       
       const utterance = new SpeechSynthesisUtterance(text);
       if (selectedVoice) utterance.voice = selectedVoice;
-      utterance.rate = 1;
-      utterance.pitch = 1;
+      utterance.rate = rate;
+      utterance.pitch = pitch;
       
       utterance.onend = () => {
         setIsSpeaking(false);
@@ -137,5 +143,9 @@ export function useVoice(): UseVoiceReturn {
     voices,
     selectedVoice,
     setSelectedVoice,
+    rate,
+    setRate,
+    pitch,
+    setPitch,
   };
 }

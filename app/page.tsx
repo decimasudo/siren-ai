@@ -181,12 +181,38 @@ export default function Home() {
                     const selected = voice.voices.find(v => v.name === e.target.value);
                     if (selected) voice.setSelectedVoice(selected);
                   }}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white"
+                  className="w-full bg-siren-dark border border-white/20 rounded-xl px-4 py-3 text-white"
                 >
                   {voice.voices.map((v) => (
                     <option key={v.name} value={v.name}>{v.name}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-white/60 mb-2">Speech Rate: {voice.rate.toFixed(1)}</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={voice.rate}
+                  onChange={(e) => voice.setRate(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-white/60 mb-2">Speech Pitch: {voice.pitch.toFixed(1)}</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={voice.pitch}
+                  onChange={(e) => voice.setPitch(parseFloat(e.target.value))}
+                  className="w-full"
+                />
               </div>
 
               <button
