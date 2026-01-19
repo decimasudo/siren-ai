@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --siren-primary: #7c3aed;
+  --siren-secondary: #2dd4bf;
+  --siren-accent: #f0abfc;
+  --siren-dark: #0a0f1c;
+  --siren-darker: #060a14;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  background: linear-gradient(135deg, var(--siren-darker) 0%, var(--siren-dark) 50%, #0d1829 100%);
+  color: white;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.5);
+  border-radius: 3px;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.4); }
+  50% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.8); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Button styles */
+.btn-primary {
+  @apply px-6 py-3 bg-gradient-to-r from-siren-primary to-purple-600 rounded-xl font-medium transition-all duration-300;
+  @apply hover:shadow-lg hover:shadow-purple-500/30 hover:scale-105;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-white/10 rounded-xl font-medium transition-all duration-300;
+  @apply hover:bg-white/20;
+}
+
+/* Orb styles */
+.orb {
+  @apply relative w-64 h-64 rounded-full;
+  background: radial-gradient(circle at 30% 30%, 
+    var(--siren-secondary) 0%, 
+    var(--siren-primary) 50%, 
+    var(--siren-accent) 100%);
+  box-shadow: 
+    0 0 60px rgba(124, 58, 237, 0.5),
+    0 0 100px rgba(45, 212, 191, 0.3),
+    inset 0 0 60px rgba(255, 255, 255, 0.1);
+}
+
+.orb.listening {
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+.orb.speaking {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* Card styles */
+.feature-card {
+  @apply p-6 rounded-2xl glass cursor-pointer transition-all duration-300;
+  @apply hover:bg-white/10 hover:scale-[1.02];
+}
+
+/* Modal styles */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50;
+}
+
+.modal-content {
+  @apply bg-siren-dark/95 border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4;
+}
+
+/* Navigation */
+.nav-pill {
+  @apply px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300;
+  @apply text-white/60 hover:text-white hover:bg-white/10;
+}
+
+.nav-pill.active {
+  @apply bg-gradient-to-r from-siren-primary to-purple-600 text-white;
+}
+
+/* Message bubbles */
+.message {
+  @apply max-w-[80%] p-4 rounded-2xl mb-3;
+}
+
+.message.user {
+  @apply bg-siren-primary/30 ml-auto rounded-br-md;
+}
+
+.message.assistant {
+  @apply bg-white/10 mr-auto rounded-bl-md;
+}
