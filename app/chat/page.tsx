@@ -274,7 +274,7 @@ export default function ChatPage() {
             <h2 className="text-xl font-semibold mb-6">Settings</h2>
             
             <div className="space-y-4">
-              <div>
+              {/* <div>
                 <label className="block text-sm text-white/60 mb-2">Mode</label>
                 <div className="flex gap-3">
                   <button
@@ -294,7 +294,7 @@ export default function ChatPage() {
                     API
                   </button>
                 </div>
-              </div>
+              </div> */}
               
               {/* <div>
   <label className="block text-sm text-white/60 mb-2">Select Voice (Debug)</label>
