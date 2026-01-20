@@ -7,7 +7,8 @@ import { DEMO_RESPONSES } from '@/lib/constants';
 interface UseChatReturn {
   messages: Message[];
   isLoading: boolean;
-  sendMessage: (content: string) => Promise<string>;
+  sendMessage: (content: string, userName?: string) => Promise<string>;
+  addLocalMessage: (content: string, role: 'user' | 'assistant') => void;
   clearMessages: () => void;
 }
 
@@ -15,7 +16,11 @@ export function useChat(demoMode: boolean = false): UseChatReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = useCallback(async (content: string): Promise<string> => {
+  const addLocalMessage = useCallback((content: string, role: 'user' | 'assistant') => {
+    setMessages(prev => [...prev, { role, content }]);
+  }, []);
+
+  const sendMessage = useCallback(async (content: string, userName?: string): Promise<string> => {
     if (!content.trim()) return '';
     
     setIsLoading(true);
@@ -39,6 +44,7 @@ export function useChat(demoMode: boolean = false): UseChatReturn {
           body: JSON.stringify({
             message: content,
             history: messages.slice(-8),
+            userName: userName, // Pass name to API
           }),
         });
         
@@ -73,6 +79,7 @@ export function useChat(demoMode: boolean = false): UseChatReturn {
     messages,
     isLoading,
     sendMessage,
+    addLocalMessage,
     clearMessages,
   };
 }

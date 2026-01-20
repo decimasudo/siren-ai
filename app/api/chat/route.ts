@@ -3,7 +3,7 @@ import { SYSTEM_PROMPT } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, history } = await request.json();
+    const { message, history, userName } = await request.json();
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     
@@ -14,8 +14,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Inject User Name into System Prompt if available
+    let currentSystemPrompt = SYSTEM_PROMPT;
+    if (userName) {
+      currentSystemPrompt += `\nThe user's name is ${userName}. Address them by name occasionally but don't overdo it.`;
+    }
+
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: currentSystemPrompt },
       ...history.slice(-8),
       { role: 'user', content: message },
     ];
