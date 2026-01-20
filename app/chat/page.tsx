@@ -42,6 +42,9 @@ export default function ChatPage() {
   const [isOnboarding, setIsOnboarding] = useState(false);
   
   const hasGreetedRef = useRef(false);
+  
+  // Ref for auto-scrolling to bottom of chat
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const voice = useVoice();
   const chat = useChat(demoMode);
@@ -68,23 +71,26 @@ export default function ChatPage() {
 
   // Greeting Logic
   useEffect(() => {
-    if (!hasGreetedRef.current && voice.selectedVoice) {
+    if (!hasGreetedRef.current && voice.currentVoice) {
       hasGreetedRef.current = true;
       
       if (isOnboarding) {
-        // First time ever: Ask for name
         voice.speak("Hello there. I don't think we've met properly yet. I'm Siren. What should I call you?");
-        // We add a system message locally so the chat log reflects this
         chat.addLocalMessage("Hello there. I don't think we've met properly yet. I'm Siren. What should I call you?", 'assistant');
       } else if (userName) {
-        // Returning user: Welcome back
         voice.speak(`Hey ${userName}, good to see you again. How are things going?`);
       } else {
-        // Fallback
         voice.speak("Hey! Ready to chat? What's on your mind?");
       }
     }
-  }, [voice.selectedVoice, voice.speak, isOnboarding, userName, chat]); // Added dependencies to ensure it fires correctly
+  }, [voice.currentVoice, voice.speak, isOnboarding, userName, chat]); 
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chat.messages]);
 
   useEffect(() => {
     if (voice.transcript) {
@@ -93,9 +99,7 @@ export default function ChatPage() {
   }, [voice.transcript]);
 
   const handleSendMessage = async (message: string) => {
-    // Intercept message if we are in onboarding mode (waiting for name)
     if (isOnboarding) {
-      // Basic extraction of name from "My name is X" or just "X"
       const name = message.replace(/my name is/i, '').replace(/it's/i, '').replace(/i am/i, '').trim();
       
       if (name.length > 0) {
@@ -105,7 +109,6 @@ export default function ChatPage() {
         
         const welcomeMsg = `It's lovely to meet you, ${name}. I'm here if you want to chat, vent, or just relax. How are you feeling right now?`;
         
-        // Update local UI
         chat.addLocalMessage(message, 'user');
         chat.addLocalMessage(welcomeMsg, 'assistant');
         voice.speak(welcomeMsg);
@@ -113,7 +116,6 @@ export default function ChatPage() {
       }
     }
 
-    // Normal chat flow
     const response = await chat.sendMessage(message, userName || undefined);
     if (response) {
       voice.speak(response);
@@ -130,15 +132,16 @@ export default function ChatPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col animate-fade-in-up">
+    // FIX: Use h-[100dvh] and overflow-hidden to lock the page height
+    <main className="h-[100dvh] flex flex-col animate-fade-in-up overflow-hidden">
+      
       {/* Header */}
-      <header className="p-4 flex justify-between items-center border-b border-white/10">
+      <header className="flex-none p-4 flex justify-between items-center border-b border-white/10 bg-black/10 backdrop-blur-sm z-10">
         <Link href="/" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
           <Icons.Home />
           <span className="hidden sm:inline text-sm font-medium">Home</span>
         </Link>
         
-        {/* Navigation */}
         <nav className="flex gap-2">
           <button
             onClick={() => setCurrentView('companion')}
@@ -171,10 +174,11 @@ export default function ChatPage() {
         </button>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Orb Section */}
-        <div className="lg:w-1/2 flex flex-col items-center justify-center p-8">
+      {/* Main Content Container - Flex-1 fills remaining space */}
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+        
+        {/* Orb Section (Left Panel) */}
+        <div className="lg:w-1/2 flex flex-col items-center justify-center p-8 overflow-y-auto">
           <Orb
             isListening={voice.isListening}
             isSpeaking={voice.isSpeaking}
@@ -220,17 +224,32 @@ export default function ChatPage() {
           )}
         </div>
 
-        {/* Content Section */}
-        <div className="lg:w-1/2 flex flex-col border-l border-white/10">
+        {/* Content Section (Right Panel) */}
+        <div className="lg:w-1/2 flex flex-col border-l border-white/10 bg-white/5 relative">
+          
           {currentView === 'companion' && (
             <>
-              <ChatMessages messages={chat.messages} />
-              <ChatInput onSend={handleSendMessage} disabled={chat.isLoading} />
+              {/* FIX: Scrollable Messages Area */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                <div className="max-w-3xl mx-auto w-full pb-4">
+                  <ChatMessages messages={chat.messages} />
+                  {/* Invisible div to track bottom of chat */}
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+
+              {/* FIX: Fixed Input Area at Bottom */}
+              <div className="flex-none p-4 border-t border-white/10 bg-[#16213e] z-10">
+                <div className="max-w-3xl mx-auto w-full">
+                  <ChatInput onSend={handleSendMessage} disabled={chat.isLoading} />
+                </div>
+              </div>
             </>
           )}
 
+          {/* Thrive and Play Views already have internal scrolling */}
           {currentView === 'thrive' && (
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/20">
               <h2 className="text-2xl font-semibold">Thrive Mode</h2>
               <MoodCheckIn onSpeak={voice.speak} />
               <AffirmationCard onSpeak={voice.speak} />
@@ -239,7 +258,7 @@ export default function ChatPage() {
           )}
 
           {currentView === 'play' && (
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/20">
               <h2 className="text-2xl font-semibold">Play Mode</h2>
               <TriviaGame onSpeak={voice.speak} />
               <FunFacts onSpeak={voice.speak} />
@@ -277,7 +296,6 @@ export default function ChatPage() {
                 </div>
               </div>
               
-              {/* Reset Name Option */}
               <div>
                 <label className="block text-sm text-white/60 mb-2">Personalization</label>
                 <div className="p-3 bg-white/5 rounded-xl flex justify-between items-center">
