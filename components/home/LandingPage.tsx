@@ -38,7 +38,7 @@ export function LandingPage() {
         <div className="animate-fade-in-up">
           <div className="mb-8 scale-90 md:scale-100">
             {/* Placeholder Orb */}
-            <Orb isListening={false} isSpeaking={false} isThinking={false} />
+            <Orb isListening={false} isSpeaking={false} isThinking={false} statusText="Made to talk with you." />
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
@@ -144,7 +144,7 @@ export function LandingPage() {
       <footer className="py-12 text-center border-t border-white/5">
         <div className="flex flex-col items-center gap-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-siren-primary to-siren-secondary bg-clip-text text-transparent">
-            Siren — AI Voice Companion
+            Siren
           </h2>
           <p className="text-white/40 text-sm">© 2024 Siren Voice Companion</p>
         </div>

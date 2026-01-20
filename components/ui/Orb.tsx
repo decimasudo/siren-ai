@@ -8,9 +8,10 @@ interface OrbProps {
   isSpeaking: boolean;
   isThinking: boolean;
   isPaused?: boolean;
+  statusText?: string;
 }
 
-export function Orb({ isListening, isSpeaking, isThinking, isPaused = false }: OrbProps) {
+export function Orb({ isListening, isSpeaking, isThinking, isPaused = false, statusText }: OrbProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -211,7 +212,7 @@ export function Orb({ isListening, isSpeaking, isThinking, isPaused = false }: O
           isSpeaking ? 'text-siren-accent' : 
           'text-white/40'
         }`}>
-          {getStatusText()}
+          {statusText || getStatusText()}
         </p>
       </div>
     </div>
