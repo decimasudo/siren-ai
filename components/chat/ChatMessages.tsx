@@ -57,7 +57,7 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
 
           {/* Message Bubble */}
           <div className={`
-            max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed
+            max-w-[90%] md:max-w-[85%] rounded-2xl p-3 md:p-4 text-sm leading-relaxed break-words
             ${msg.role === 'user' 
               ? 'bg-white/10 text-white rounded-tr-none' 
               : 'bg-siren-primary/10 border border-siren-primary/20 text-white/90 rounded-tl-none'}

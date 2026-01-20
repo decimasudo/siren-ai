@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-// PRIORITY LIST (Keep this for the default auto-selection)
+// PRIORITY LIST - UPDATED FOR CHROME/SAFARI/EDGE PREFERENCES
 const PREFERRED_VOICES = [
-  'Microsoft Sonia Online (Natural)',
+  'Google UK English Female',       // Chrome Preferred
+  'Karen',                          // Safari Preferred (Mac)
+  'Microsoft Sonia Online (Natural)', // Edge Preferred
   'Microsoft Ava Online (Natural)',
-  'Google UK English Female', 
   'Martha', 
   'Serena',
   'Samantha', 
@@ -61,7 +62,7 @@ export function useVoice(): UseVoiceReturn {
     synthRef.current = window.speechSynthesis;
 
     const getPreferredVoice = (available: SpeechSynthesisVoice[]) => {
-      // 1. Search for specific "Premium/Natural" names in our list
+      // 1. Search for specific names in our priority list
       for (const name of PREFERRED_VOICES) {
         const found = available.find((v) => v.name.includes(name));
         if (found) return found;
