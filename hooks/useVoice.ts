@@ -2,6 +2,17 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+// Priority list for "Calm/Natural" Voices
+const PREFERRED_VOICES = [
+  'Microsoft Sonia Online (Natural)',
+  'Microsoft Ava Online (Natural)', 
+  'Ava (Premium)', 
+  'Ava (Enhanced)',
+  'Victoria',
+  'Google US English', 
+  'Google UK English Female',
+];
+
 interface UseVoiceReturn {
   isListening: boolean;
   isSpeaking: boolean;
@@ -12,9 +23,7 @@ interface UseVoiceReturn {
   speak: (text: string) => Promise<void>;
   stopSpeaking: () => void;
   togglePause: () => void;
-  voices: SpeechSynthesisVoice[];
-  selectedVoice: SpeechSynthesisVoice | null;
-  setSelectedVoice: (voice: SpeechSynthesisVoice) => void;
+  currentVoice: string | undefined;
   rate: number;
   setRate: (rate: number) => void;
   pitch: number;
@@ -22,73 +31,65 @@ interface UseVoiceReturn {
 }
 
 export function useVoice(): UseVoiceReturn {
+  // --- State ---
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   
-  // Default Settings for "Calm Anime" vibe
-  const [rate, setRate] = useState(1.0);
-  const [pitch, setPitch] = useState(1.1); // Slightly higher pitch for lighter tone
-  
+  // Settings for calm persona
+  const [rate, setRate] = useState(0.9); // Slightly slower for clarity
+  const [pitch, setPitch] = useState(1.0); 
+
+  // --- Refs ---
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
+  // --- 1. Initialize Voice (TTS) ---
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
     synthRef.current = window.speechSynthesis;
-    
-    const loadVoices = () => {
-      const availableVoices = synthRef.current?.getVoices() || [];
-      const englishVoices = availableVoices.filter(v => v.lang.startsWith('en'));
-      setVoices(englishVoices);
-      
-      // Auto-select best "Calm Female/Anime" voice
-      if (englishVoices.length > 0) {
-        const preferred = 
-          // 1. Top Tier: High quality natural voices
-          englishVoices.find(v => v.name.includes('Microsoft Sonia Online (Natural)')) ||
-          englishVoices.find(v => v.name.includes('Microsoft Ava Online (Natural)')) ||
-          
-          // 2. Reliable Standard Soft Voices
-          englishVoices.find(v => v.name === 'Google US English') ||
-          englishVoices.find(v => v.name.includes('Samantha')) ||
-          
-          // 3. Fallbacks
-          englishVoices.find(v => v.name.includes('Microsoft Zira')) ||
-          englishVoices.find(v => v.name.includes('Female')) ||
-          englishVoices[0];
 
-        if (preferred) {
-          setSelectedVoice(preferred);
-        }
+    const getPreferredVoice = (available: SpeechSynthesisVoice[]) => {
+      // 1. Try exact matches from our "Calm" list
+      for (const name of PREFERRED_VOICES) {
+        const found = available.find((v) => v.name.includes(name));
+        if (found) return found;
+      }
+      // 2. Try "Natural" keywords
+      const natural = available.find(v => v.name.includes('Natural') && v.lang.startsWith('en'));
+      if (natural) return natural;
+
+      // 3. Fallback to any Female English voice
+      return available.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Woman'))) 
+             || available.find(v => v.default) 
+             || available[0];
+    };
+
+    const loadVoices = () => {
+      const voices = synthRef.current?.getVoices() || [];
+      if (voices.length > 0) {
+        setVoice(getPreferredVoice(voices));
       }
     };
-    
+
     loadVoices();
-    
-    if (synthRef.current?.onvoiceschanged !== undefined) {
+    if (synthRef.current) {
       synthRef.current.onvoiceschanged = loadVoices;
     }
-    
-    return () => {
-      if (synthRef.current) {
-        synthRef.current.onvoiceschanged = null;
-      }
-    };
   }, []);
 
+  // --- 2. Initialize Recognition (STT) ---
   const initRecognition = useCallback(() => {
     if (typeof window === 'undefined') return null;
     
+    // Check for browser support
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
     
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = false; // Stop after one sentence
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     
@@ -107,35 +108,43 @@ export function useVoice(): UseVoiceReturn {
       }
     };
     
-    recognition.onerror = () => setIsListening(false);
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
     
     return recognition;
   }, []);
+
+  // --- 3. Actions ---
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) {
       recognitionRef.current = initRecognition();
     }
     try {
+      // If already started, this might throw, so we catch it
       recognitionRef.current?.start();
     } catch (e) {
-      console.error('Recognition start error:', e);
+      console.log('Recognition already started or failed:', e);
     }
   }, [initRecognition]);
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
+    setIsListening(false);
   }, []);
 
   const speak = useCallback(async (text: string): Promise<void> => {
     if (!synthRef.current || !text) return;
     
     return new Promise((resolve) => {
-      synthRef.current?.cancel();
+      synthRef.current?.cancel(); // Stop previous
       setIsSpeaking(true);
       
       const utterance = new SpeechSynthesisUtterance(text);
-      if (selectedVoice) utterance.voice = selectedVoice;
+      if (voice) utterance.voice = voice;
+      
       utterance.rate = rate;
       utterance.pitch = pitch;
       
@@ -145,23 +154,15 @@ export function useVoice(): UseVoiceReturn {
         resolve();
       };
       
-      utterance.onpause = () => {
-        setIsPaused(true);
-      };
-      
-      utterance.onresume = () => {
-        setIsPaused(false);
-      };
-      
       utterance.onerror = () => {
         setIsSpeaking(false);
         setIsPaused(false);
         resolve();
       };
-      
+
       synthRef.current?.speak(utterance);
     });
-  }, [selectedVoice, rate, pitch]);
+  }, [voice, rate, pitch]);
 
   const stopSpeaking = useCallback(() => {
     synthRef.current?.cancel();
@@ -189,9 +190,7 @@ export function useVoice(): UseVoiceReturn {
     speak,
     stopSpeaking,
     togglePause,
-    voices,
-    selectedVoice,
-    setSelectedVoice,
+    currentVoice: voice?.name,
     rate,
     setRate,
     pitch,
