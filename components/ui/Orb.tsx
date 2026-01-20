@@ -4,17 +4,19 @@ interface OrbProps {
   isListening: boolean;
   isSpeaking: boolean;
   isThinking: boolean;
+  isPaused?: boolean;
 }
 
-export function Orb({ isListening, isSpeaking, isThinking }: OrbProps) {
+export function Orb({ isListening, isSpeaking, isThinking, isPaused = false }: OrbProps) {
   const getOrbClass = () => {
-    if (isSpeaking) return 'speaking';
+    if (isSpeaking && !isPaused) return 'speaking';
     if (isListening) return 'listening';
     if (isThinking) return 'animate-pulse';
     return '';
   };
 
   const getStatusText = () => {
+    if (isSpeaking && isPaused) return 'Paused...';
     if (isSpeaking) return 'Speaking...';
     if (isListening) return 'Listening...';
     if (isThinking) return 'Thinking...';

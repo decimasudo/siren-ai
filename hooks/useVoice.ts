@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 interface UseVoiceReturn {
   isListening: boolean;
   isSpeaking: boolean;
+  isPaused: boolean;
   transcript: string;
   startListening: () => void;
   stopListening: () => void;
   speak: (text: string) => Promise<void>;
   stopSpeaking: () => void;
+  togglePause: () => void;
   voices: SpeechSynthesisVoice[];
   selectedVoice: SpeechSynthesisVoice | null;
   setSelectedVoice: (voice: SpeechSynthesisVoice) => void;
@@ -22,6 +24,7 @@ interface UseVoiceReturn {
 export function useVoice(): UseVoiceReturn {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
@@ -42,7 +45,9 @@ export function useVoice(): UseVoiceReturn {
       setVoices(englishVoices);
       
       if (englishVoices.length > 0 && !selectedVoice) {
-        const preferred = englishVoices.find(v => v.name.includes('Google US English')) || englishVoices[0];
+        const preferred = englishVoices.find(v => v.name.includes('Microsoft Sonia Online (Natural) - English (United Kingdom)')) ||
+                         englishVoices.find(v => v.name.includes('Google US English')) ||
+                         englishVoices[0];
         setSelectedVoice(preferred);
       }
     };
@@ -115,11 +120,21 @@ export function useVoice(): UseVoiceReturn {
       
       utterance.onend = () => {
         setIsSpeaking(false);
+        setIsPaused(false);
         resolve();
+      };
+      
+      utterance.onpause = () => {
+        setIsPaused(true);
+      };
+      
+      utterance.onresume = () => {
+        setIsPaused(false);
       };
       
       utterance.onerror = () => {
         setIsSpeaking(false);
+        setIsPaused(false);
         resolve();
       };
       
@@ -130,16 +145,33 @@ export function useVoice(): UseVoiceReturn {
   const stopSpeaking = useCallback(() => {
     synthRef.current?.cancel();
     setIsSpeaking(false);
+    setIsPaused(false);
+  }, []);
+
+  const togglePause = useCallback(() => {
+    if (synthRef.current?.paused) {
+      synthRef.current.resume();
+      setIsPaused(false);
+    } else {
+      synthRef.current?.pause();
+      setIsPaused(true);
+    }
+  }, []);
+
+  const resumeSpeaking = useCallback(() => {
+    synthRef.current?.resume();
   }, []);
 
   return {
     isListening,
     isSpeaking,
+    isPaused,
     transcript,
     startListening,
     stopListening,
     speak,
     stopSpeaking,
+    togglePause,
     voices,
     selectedVoice,
     setSelectedVoice,

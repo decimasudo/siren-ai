@@ -32,6 +32,11 @@ export default function Home() {
     }).then(res => {
       if (res.ok) setDemoMode(false);
     }).catch(() => {});
+
+    // Greeting on every visit
+    setTimeout(() => {
+      voice.speak("Hey there! I'm Siren, your chill voice companion. Ready to chat, relax, or have some fun? What's up?");
+    }, 1000); // Small delay to ensure voices are loaded
   }, []);
 
   // Handle voice input
@@ -97,6 +102,7 @@ export default function Home() {
             isListening={voice.isListening}
             isSpeaking={voice.isSpeaking}
             isThinking={chat.isLoading}
+            isPaused={voice.isPaused}
           />
           
           <div className="mt-8 flex items-center gap-4">
@@ -106,6 +112,27 @@ export default function Home() {
               onMouseUp={handleVoiceStop}
               disabled={voice.isSpeaking}
             />
+            {voice.isSpeaking && (
+              <button
+                onClick={voice.togglePause}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border ${
+                  voice.isPaused 
+                    ? 'bg-green-500/20 hover:bg-green-500/30 border-green-500/30' 
+                    : 'bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/30'
+                }`}
+              >
+                {voice.isPaused ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-300">
+                    <polygon points="5,3 19,12 5,21 5,3"/>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-300">
+                    <rect x="6" y="4" width="4" height="16"/>
+                    <rect x="14" y="4" width="4" height="16"/>
+                  </svg>
+                )}
+              </button>
+            )}
             <span className="text-white/50 text-sm">Hold to speak</span>
           </div>
 
