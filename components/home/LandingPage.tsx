@@ -38,11 +38,11 @@ export function LandingPage() {
         <div className="animate-fade-in-up">
           <div className="mb-8 scale-90 md:scale-100">
             {/* Placeholder Orb */}
-            <Orb isListening={false} isSpeaking={false} isThinking={false} statusText="Made to talk with you." />
+            <Orb isListening={false} isSpeaking={false} isThinking={false} />
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-            Find Your <span className="bg-gradient-to-r from-siren-secondary to-siren-primary bg-clip-text text-transparent">Calm</span>
+            Made to <span className="bg-gradient-to-r from-siren-secondary to-siren-primary bg-clip-text text-transparent">talk with you.</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">

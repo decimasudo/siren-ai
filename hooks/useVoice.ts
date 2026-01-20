@@ -2,15 +2,16 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-// Priority list for "Calm/Natural" Voices
+// PRIORITY LIST (Keep this for the default auto-selection)
 const PREFERRED_VOICES = [
   'Microsoft Sonia Online (Natural)',
-  'Microsoft Ava Online (Natural)', 
-  'Ava (Premium)', 
-  'Ava (Enhanced)',
-  'Victoria',
-  'Google US English', 
-  'Google UK English Female',
+  'Microsoft Ava Online (Natural)',
+  'Google UK English Female', 
+  'Martha', 
+  'Serena',
+  'Samantha', 
+  'Google US English',
+  'English United Kingdom',
 ];
 
 interface UseVoiceReturn {
@@ -24,6 +25,11 @@ interface UseVoiceReturn {
   stopSpeaking: () => void;
   togglePause: () => void;
   currentVoice: string | undefined;
+  
+  // New exports for the Dropdown
+  voices: SpeechSynthesisVoice[]; 
+  setVoiceByName: (name: string) => void;
+
   rate: number;
   setRate: (rate: number) => void;
   pitch: number;
@@ -36,10 +42,13 @@ export function useVoice(): UseVoiceReturn {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   
-  // Settings for calm persona
-  const [rate, setRate] = useState(0.9); // Slightly slower for clarity
+  // Voice State
+  const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  
+  // Settings
+  const [rate, setRate] = useState(0.9); 
   const [pitch, setPitch] = useState(1.0); 
 
   // --- Refs ---
@@ -52,25 +61,34 @@ export function useVoice(): UseVoiceReturn {
     synthRef.current = window.speechSynthesis;
 
     const getPreferredVoice = (available: SpeechSynthesisVoice[]) => {
-      // 1. Try exact matches from our "Calm" list
+      // 1. Search for specific "Premium/Natural" names in our list
       for (const name of PREFERRED_VOICES) {
         const found = available.find((v) => v.name.includes(name));
         if (found) return found;
       }
-      // 2. Try "Natural" keywords
+      
+      // 2. Fallback: Try to find ANY "UK English" Female voice
+      const ukFemale = available.find(v => v.lang === 'en-GB' && (v.name.includes('Female') || v.name.includes('Woman')));
+      if (ukFemale) return ukFemale;
+
+      // 3. Fallback: Any "Natural" English voice
       const natural = available.find(v => v.name.includes('Natural') && v.lang.startsWith('en'));
       if (natural) return natural;
 
-      // 3. Fallback to any Female English voice
-      return available.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Woman'))) 
-             || available.find(v => v.default) 
-             || available[0];
+      // 4. Last Resort: Default
+      return available.find(v => v.default) || available[0];
     };
 
     const loadVoices = () => {
       const voices = synthRef.current?.getVoices() || [];
       if (voices.length > 0) {
-        setVoice(getPreferredVoice(voices));
+        setAvailableVoices(voices); // Store all voices
+        
+        // Only set default if one hasn't been chosen yet
+        if (!voice) {
+            const best = getPreferredVoice(voices);
+            setVoice(best);
+        }
       }
     };
 
@@ -78,18 +96,27 @@ export function useVoice(): UseVoiceReturn {
     if (synthRef.current) {
       synthRef.current.onvoiceschanged = loadVoices;
     }
-  }, []);
+  }, [voice]);
+
+  // Helper to manually set voice from dropdown
+  const setVoiceByName = (name: string) => {
+    const selected = availableVoices.find(v => v.name === name);
+    if (selected) {
+        setVoice(selected);
+        console.log("Manually selected:", selected.name);
+    }
+  };
 
   // --- 2. Initialize Recognition (STT) ---
   const initRecognition = useCallback(() => {
     if (typeof window === 'undefined') return null;
     
-    // Check for browser support
+    // Check browser support
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
     
     const recognition = new SpeechRecognition();
-    recognition.continuous = false; // Stop after one sentence
+    recognition.continuous = false; 
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     
@@ -123,23 +150,24 @@ export function useVoice(): UseVoiceReturn {
       recognitionRef.current = initRecognition();
     }
     try {
-      // If already started, this might throw, so we catch it
       recognitionRef.current?.start();
     } catch (e) {
-      console.log('Recognition already started or failed:', e);
+      console.log('Recognition start error:', e);
     }
   }, [initRecognition]);
 
   const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
   }, []);
 
   const speak = useCallback(async (text: string): Promise<void> => {
     if (!synthRef.current || !text) return;
     
     return new Promise((resolve) => {
-      synthRef.current?.cancel(); // Stop previous
+      synthRef.current?.cancel();
       setIsSpeaking(true);
       
       const utterance = new SpeechSynthesisUtterance(text);
@@ -190,7 +218,11 @@ export function useVoice(): UseVoiceReturn {
     speak,
     stopSpeaking,
     togglePause,
+    
     currentVoice: voice?.name,
+    voices: availableVoices, // Exporting the list
+    setVoiceByName,          // Exporting the setter
+    
     rate,
     setRate,
     pitch,

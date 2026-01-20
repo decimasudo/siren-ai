@@ -297,6 +297,26 @@ export default function ChatPage() {
               </div>
               
               <div>
+  <label className="block text-sm text-white/60 mb-2">Select Voice (Debug)</label>
+  <select
+    value={voice.currentVoice || ''}
+    onChange={(e) => voice.setVoiceByName(e.target.value)}
+    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-siren-primary/50"
+  >
+    {voice.voices
+      .filter((v) => v.lang.startsWith('en')) // Filter to English only to keep list clean
+      .map((v) => (
+        <option key={v.name} value={v.name} className="text-black bg-white">
+          {v.name} ({v.lang})
+        </option>
+      ))}
+  </select>
+  <p className="text-xs text-white/40 mt-2">
+    Current: {voice.currentVoice}
+  </p>
+</div>
+              
+              <div>
                 <label className="block text-sm text-white/60 mb-2">Personalization</label>
                 <div className="p-3 bg-white/5 rounded-xl flex justify-between items-center">
                    <span className="text-sm">Name: {userName || "Not set"}</span>
