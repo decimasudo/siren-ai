@@ -296,7 +296,7 @@ export default function ChatPage() {
                 </div>
               </div>
               
-              <div>
+              {/* <div>
   <label className="block text-sm text-white/60 mb-2">Select Voice (Debug)</label>
   <select
     value={voice.currentVoice || ''}
@@ -314,7 +314,7 @@ export default function ChatPage() {
   <p className="text-xs text-white/40 mt-2">
     Current: {voice.currentVoice}
   </p>
-</div>
+</div> */}
               
               <div>
                 <label className="block text-sm text-white/60 mb-2">Personalization</label>
