@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ViewType } from '@/types';
 import { useVoice } from '@/hooks/useVoice';
 import { useChat } from '@/hooks/useChat';
@@ -18,6 +18,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<ViewType>('companion');
   const [demoMode, setDemoMode] = useState(true);
   const [showSetup, setShowSetup] = useState(false);
+  const hasGreetedRef = useRef(false); // Track if we have already greeted the user
 
   const voice = useVoice();
   const chat = useChat(demoMode);
@@ -32,12 +33,20 @@ export default function Home() {
     }).then(res => {
       if (res.ok) setDemoMode(false);
     }).catch(() => {});
-
-    // Greeting on every visit
-    setTimeout(() => {
-      voice.speak("Hey there! I'm Siren, your chill voice companion. Ready to chat, relax, or have some fun? What's up?");
-    }, 1000); // Small delay to ensure voices are loaded
   }, []);
+
+  // Greeting on first visit, ONLY when the correct voice is ready
+  useEffect(() => {
+    // We wait until:
+    // 1. We haven't greeted yet
+    // 2. A voice has been selected (ensuring we don't use the robotic default)
+    if (!hasGreetedRef.current && voice.selectedVoice) {
+      // Mark as greeted immediately to prevent double greeting
+      hasGreetedRef.current = true;
+      
+      voice.speak("Hey there! I'm Siren, your chill voice companion. Ready to chat, relax, or have some fun? What's up?");
+    }
+  }, [voice.selectedVoice, voice.speak]);
 
   // Handle voice input
   useEffect(() => {
@@ -154,7 +163,7 @@ export default function Home() {
 
           {currentView === 'thrive' && (
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <h2 className="text-2xl font-semibold">Thrive Mode 🌿</h2>
+              <h2 className="text-2xl font-semibold">Thrive Mode 🧘</h2>
               <MoodCheckIn onSpeak={voice.speak} />
               <AffirmationCard onSpeak={voice.speak} />
               <SleepStories onPlayStory={voice.speak} demoMode={demoMode} />

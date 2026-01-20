@@ -44,19 +44,35 @@ export function useVoice(): UseVoiceReturn {
       const englishVoices = availableVoices.filter(v => v.lang.startsWith('en'));
       setVoices(englishVoices);
       
+      // Only set the default preference if user hasn't selected one yet
       if (englishVoices.length > 0 && !selectedVoice) {
-        const preferred = englishVoices.find(v => v.name.includes('Microsoft Sonia Online (Natural) - English (United Kingdom)')) ||
-                         englishVoices.find(v => v.name.includes('Google US English')) ||
-                         englishVoices[0];
-        setSelectedVoice(preferred);
+        const preferred = 
+          // 1. Try specifically for Microsoft Sonia (User preference)
+          englishVoices.find(v => v.name.includes('Microsoft Sonia Online (Natural)')) ||
+          // 2. Try any "Natural" voice (often high quality neural voices in Edge/Chrome)
+          englishVoices.find(v => v.name.includes('Natural')) ||
+          // 3. Try Google US English (reliable standard voice)
+          englishVoices.find(v => v.name.includes('Google US English')) ||
+          // 4. Fallback to first available English voice
+          englishVoices[0];
+
+        if (preferred) {
+          setSelectedVoice(preferred);
+        }
       }
     };
     
     loadVoices();
-    synthRef.current?.addEventListener('voiceschanged', loadVoices);
+    
+    // Chrome requires this event to load voices reliably
+    if (synthRef.current?.onvoiceschanged !== undefined) {
+      synthRef.current.onvoiceschanged = loadVoices;
+    }
     
     return () => {
-      synthRef.current?.removeEventListener('voiceschanged', loadVoices);
+      if (synthRef.current) {
+        synthRef.current.onvoiceschanged = null;
+      }
     };
   }, [selectedVoice]);
 
@@ -140,7 +156,7 @@ export function useVoice(): UseVoiceReturn {
       
       synthRef.current?.speak(utterance);
     });
-  }, [selectedVoice]);
+  }, [selectedVoice, rate, pitch]); // Added dependencies to ensure latest voice/settings are used
 
   const stopSpeaking = useCallback(() => {
     synthRef.current?.cancel();
@@ -156,10 +172,6 @@ export function useVoice(): UseVoiceReturn {
       synthRef.current?.pause();
       setIsPaused(true);
     }
-  }, []);
-
-  const resumeSpeaking = useCallback(() => {
-    synthRef.current?.resume();
   }, []);
 
   return {
