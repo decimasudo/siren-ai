@@ -14,18 +14,39 @@ import { SleepStories } from '@/components/thrive/SleepStories';
 import { TriviaGame } from '@/components/play/TriviaGame';
 import { FunFacts } from '@/components/play/FunFacts';
 
+// Inline Icons for Navbar (Lucide style)
+const Icons = {
+  Companion: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+    </svg>
+  ),
+  Thrive: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+    </svg>
+  ),
+  Play: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="6" x2="10" y1="12" y2="12" />
+      <line x1="8" x2="8" y1="10" y2="14" />
+      <line x1="15" x2="15.01" y1="13" y2="13" />
+      <line x1="18" x2="18.01" y1="11" y2="11" />
+      <rect width="20" height="12" x="2" y="6" rx="2" />
+    </svg>
+  )
+};
+
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewType>('companion');
   const [demoMode, setDemoMode] = useState(true);
   const [showSetup, setShowSetup] = useState(false);
-  const hasGreetedRef = useRef(false); // Track if we have already greeted the user
+  const hasGreetedRef = useRef(false);
 
   const voice = useVoice();
   const chat = useChat(demoMode);
 
-  // Check if we're in demo mode on mount
   useEffect(() => {
-    // In production, API key is on server - check if API works
     fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -35,20 +56,13 @@ export default function Home() {
     }).catch(() => {});
   }, []);
 
-  // Greeting on first visit, ONLY when the correct voice is ready
   useEffect(() => {
-    // We wait until:
-    // 1. We haven't greeted yet
-    // 2. A voice has been selected (ensuring we don't use the robotic default)
     if (!hasGreetedRef.current && voice.selectedVoice) {
-      // Mark as greeted immediately to prevent double greeting
       hasGreetedRef.current = true;
-      
       voice.speak("Hey there! I'm Siren, your chill voice companion. Ready to chat, relax, or have some fun? What's up?");
     }
   }, [voice.selectedVoice, voice.speak]);
 
-  // Handle voice input
   useEffect(() => {
     if (voice.transcript) {
       handleSendMessage(voice.transcript);
@@ -79,27 +93,39 @@ export default function Home() {
           Siren
         </h1>
         
-        {/* Navigation */}
+        {/* Navigation - Updated with Lucide-style SVGs */}
         <nav className="flex gap-2">
-          {(['companion', 'thrive', 'play'] as ViewType[]).map((view) => (
-            <button
-              key={view}
-              onClick={() => setCurrentView(view)}
-              className={`nav-pill ${currentView === view ? 'active' : ''}`}
-            >
-              {view === 'companion' && '💬'}
-              {view === 'thrive' && '🧘'}
-              {view === 'play' && '🎮'}
-              <span className="ml-2 capitalize hidden sm:inline">{view}</span>
-            </button>
-          ))}
+          <button
+            onClick={() => setCurrentView('companion')}
+            className={`nav-pill flex items-center gap-2 ${currentView === 'companion' ? 'active' : ''}`}
+          >
+            <Icons.Companion />
+            <span className="capitalize hidden sm:inline">Companion</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('thrive')}
+            className={`nav-pill flex items-center gap-2 ${currentView === 'thrive' ? 'active' : ''}`}
+          >
+            <Icons.Thrive />
+            <span className="capitalize hidden sm:inline">Thrive</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('play')}
+            className={`nav-pill flex items-center gap-2 ${currentView === 'play' ? 'active' : ''}`}
+          >
+            <Icons.Play />
+            <span className="capitalize hidden sm:inline">Play</span>
+          </button>
         </nav>
 
         <button
           onClick={() => setShowSetup(true)}
           className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
         >
-          ⚙️
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
         </button>
       </header>
 
@@ -163,7 +189,7 @@ export default function Home() {
 
           {currentView === 'thrive' && (
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <h2 className="text-2xl font-semibold">Thrive Mode 🧘</h2>
+              <h2 className="text-2xl font-semibold">Thrive Mode</h2>
               <MoodCheckIn onSpeak={voice.speak} />
               <AffirmationCard onSpeak={voice.speak} />
               <SleepStories onPlayStory={voice.speak} demoMode={demoMode} />
@@ -172,7 +198,7 @@ export default function Home() {
 
           {currentView === 'play' && (
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <h2 className="text-2xl font-semibold">Play Mode 🎮</h2>
+              <h2 className="text-2xl font-semibold">Play Mode</h2>
               <TriviaGame onSpeak={voice.speak} />
               <FunFacts onSpeak={voice.speak} />
             </div>
@@ -180,7 +206,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Setup Modal */}
+      {/* Setup Modal - Voice Selector REMOVED */}
       {showSetup && (
         <div className="modal-overlay" onClick={() => setShowSetup(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -209,21 +235,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm text-white/60 mb-2">Voice</label>
-                <select
-                  value={voice.selectedVoice?.name || ''}
-                  onChange={(e) => {
-                    const selected = voice.voices.find(v => v.name === e.target.value);
-                    if (selected) voice.setSelectedVoice(selected);
-                  }}
-                  className="w-full bg-siren-dark border border-white/20 rounded-xl px-4 py-3 text-white"
-                >
-                  {voice.voices.map((v) => (
-                    <option key={v.name} value={v.name}>{v.name}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Voice Selector Removed Here */}
 
               <div>
                 <label className="block text-sm text-white/60 mb-2">Speech Rate: {voice.rate.toFixed(1)}</label>

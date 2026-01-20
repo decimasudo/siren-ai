@@ -28,8 +28,10 @@ export function useVoice(): UseVoiceReturn {
   const [transcript, setTranscript] = useState('');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [rate, setRate] = useState(1);
-  const [pitch, setPitch] = useState(1);
+  
+  // Default Settings for "Calm Anime" vibe
+  const [rate, setRate] = useState(1.0);
+  const [pitch, setPitch] = useState(1.1); // Slightly higher pitch for lighter tone
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -44,16 +46,20 @@ export function useVoice(): UseVoiceReturn {
       const englishVoices = availableVoices.filter(v => v.lang.startsWith('en'));
       setVoices(englishVoices);
       
-      // Only set the default preference if user hasn't selected one yet
-      if (englishVoices.length > 0 && !selectedVoice) {
+      // Auto-select best "Calm Female/Anime" voice
+      if (englishVoices.length > 0) {
         const preferred = 
-          // 1. Try specifically for Microsoft Sonia (User preference)
+          // 1. Top Tier: High quality natural voices
           englishVoices.find(v => v.name.includes('Microsoft Sonia Online (Natural)')) ||
-          // 2. Try any "Natural" voice (often high quality neural voices in Edge/Chrome)
-          englishVoices.find(v => v.name.includes('Natural')) ||
-          // 3. Try Google US English (reliable standard voice)
-          englishVoices.find(v => v.name.includes('Google US English')) ||
-          // 4. Fallback to first available English voice
+          englishVoices.find(v => v.name.includes('Microsoft Ava Online (Natural)')) ||
+          
+          // 2. Reliable Standard Soft Voices
+          englishVoices.find(v => v.name === 'Google US English') ||
+          englishVoices.find(v => v.name.includes('Samantha')) ||
+          
+          // 3. Fallbacks
+          englishVoices.find(v => v.name.includes('Microsoft Zira')) ||
+          englishVoices.find(v => v.name.includes('Female')) ||
           englishVoices[0];
 
         if (preferred) {
@@ -64,7 +70,6 @@ export function useVoice(): UseVoiceReturn {
     
     loadVoices();
     
-    // Chrome requires this event to load voices reliably
     if (synthRef.current?.onvoiceschanged !== undefined) {
       synthRef.current.onvoiceschanged = loadVoices;
     }
@@ -74,7 +79,7 @@ export function useVoice(): UseVoiceReturn {
         synthRef.current.onvoiceschanged = null;
       }
     };
-  }, [selectedVoice]);
+  }, []);
 
   const initRecognition = useCallback(() => {
     if (typeof window === 'undefined') return null;
@@ -156,7 +161,7 @@ export function useVoice(): UseVoiceReturn {
       
       synthRef.current?.speak(utterance);
     });
-  }, [selectedVoice, rate, pitch]); // Added dependencies to ensure latest voice/settings are used
+  }, [selectedVoice, rate, pitch]);
 
   const stopSpeaking = useCallback(() => {
     synthRef.current?.cancel();
