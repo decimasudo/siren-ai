@@ -43,7 +43,7 @@ export default function ChatPage() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [copied, setCopied] = useState(false);
   
-  const contractAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"; // Contract Address
+  const contractAddress = "J1eC3agduoFQNkHqTggiMYBGpxsPRQW1AEqQPUgapump"; // Contract Address
   
   const hasGreetedRef = useRef(false);
   
@@ -158,7 +158,7 @@ export default function ChatPage() {
           </Link>
           
           {/* Contract Address Section */}
-          {/* <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
             <span className="text-xs text-white/60 font-medium">CA:</span>
             <code className="text-xs font-mono text-white/80">{contractAddress.slice(0, 8)}...{contractAddress.slice(-6)}</code>
             <button
@@ -177,7 +177,7 @@ export default function ChatPage() {
                 </svg>
               )}
             </button>
-          </div> */}
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
